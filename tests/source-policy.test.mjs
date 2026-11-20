@@ -60,10 +60,14 @@ test('manual application updates do not fetch any upstream feed', () => {
   assert.doesNotMatch(source, /URLSession|Data\(contentsOf:|fetchUpdates\(|https:\/\//);
 });
 
-test('only manually dispatched standard SideStore build is exposed', () => {
+test('legacy workflows stay manual; separate WK device-test workflow cannot invoke Gecko packaging', () => {
   const dir = path.join(root, '.github/workflows');
   const names = fs.readdirSync(dir).filter(p => p.endsWith('.yml'));
-  assert.deepEqual(names.sort(), ['build-sidestore.yml', 'build.yml', 'capture-protection-experiment.yml']);
+  assert.deepEqual(names.sort(), ['build-sidestore.yml', 'build.yml', 'capture-protection-experiment.yml', 'device-probe.yml']);
+  const device = read('.github/workflows/device-probe.yml');
+  assert.match(device, /workflow_dispatch:/);
+  assert.match(device, /Build-DeviceProbe\.sh/);
+  assert.doesNotMatch(device, /build_normal_ipa|Build-Gecko|uses:.*build\.yml/);
   const experiment = read('.github/workflows/capture-protection-experiment.yml');
   assert.match(experiment, /workflow_dispatch:/);
   assert.match(experiment, /Test-CaptureProtection\.sh/);

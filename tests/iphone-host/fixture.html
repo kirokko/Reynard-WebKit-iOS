@@ -1,0 +1,21 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WK + uBO 真机诊断</title><style>body{font:16px -apple-system,sans-serif;padding:16px;color:#19212d;background:#f5f7fb}button{font:inherit;padding:12px;margin:4px}.port-ad{padding:16px;background:#ffd4d4}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:12px;border-radius:10px}small{color:#505b70}</style></head><body><h2>WebKit + uBO 测试页</h2><p>这是应用内 127.0.0.1 的合成页面，不是代理，也不转发任何网站流量。</p><p><b>插件仅有合成规则，不含已启用的真实默认广告列表。</b>页面正常加载不等于扩展已工作。原版面板开关/动态防火墙尚未接入DNR。</p><div class="port-ad">合成广告元素：只有原版外观过滤实际工作才会消失。</div><p id="kept">普通内容应保留。</p><button onclick="runNetworkTest()">检测实际网络阻断</button><button onclick="window.postMessage('reynard-port-update','*')">测试新增一条本机规则</button><p><small>停用插件应使用上方原生“停用uBO”，它会真正卸载扩展上下文。开启/关闭后请重新测试。</small></p><h3>网络结果</h3><pre id="network">尚未检测</pre><h3>扩展原始状态 / 错误</h3><pre id="state">未加载扩展，或等待内容脚本消息。点击上方“启用uBO”。</pre><script id="html-filter-target">window.__htmlMarker='reynard-never-remove';</script><script>
+window.runNetworkTest = async function() {
+  const token=Date.now()+'-'+Math.random().toString(36).slice(2); const out={token};
+  for(const name of ['control','blocked','allowed','important','xhr-only','image-only','new-rule']) {
+    const abort=new AbortController(); let timeout=false; const timer=setTimeout(()=>{timeout=true;abort.abort()},6000);
+    try { const r=await fetch('/port/'+name+'.txt?token='+token,{cache:'no-store',signal:abort.signal});out[name]={loaded:true,status:r.status,body:(await r.text()).slice(0,100)}; }
+    catch(e){out[name]={loaded:false,timeout,error:String(e)}} finally{clearTimeout(timer)}
+  }
+  for(const name of ['control.png','image-only.txt']) out['image:'+name]=await new Promise(resolve=>{
+    const image=new Image();const timer=setTimeout(()=>{image.src='';resolve({loaded:false,timeout:true})},6000);
+    image.onload=()=>{clearTimeout(timer);resolve({loaded:true})};image.onerror=()=>{clearTimeout(timer);resolve({loaded:false})};image.src='/port/'+name+'?token='+token;
+  });
+  try{out.serverHits=await(await fetch('/port/hits.json?token='+token,{cache:'no-store'})).json()}catch(e){out.serverError=String(e)}
+  out.cosmeticDisplay=getComputedStyle(document.querySelector('.port-ad')).display;
+  out.scriptletObserved=window.__reynardScriptlet===true;
+  out.htmlMarkerStillPresent=window.__htmlMarker==='reynard-never-remove';
+  document.documentElement.setAttribute('data-device-network',JSON.stringify(out));
+  document.querySelector('#network').textContent=JSON.stringify(out,null,2);return out;
+};
+setInterval(()=>{const e=document.documentElement; const value=e.getAttribute('data-ubo-port-status'); if(value)document.querySelector('#state').textContent=value; const err=e.getAttribute('data-ubo-port-bridge-error');if(err&&!value)document.querySelector('#state').textContent=err;},500);
+</script></body></html>

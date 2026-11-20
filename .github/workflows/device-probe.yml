@@ -1,0 +1,45 @@
+name: Build iPhone WebKit test host (NOT full uBO acceptance)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: wk-device-probe-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  device_probe:
+    runs-on: macos-26
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.6'
+      - name: Preserve legacy app baseline and source safety checks
+        run: |
+          node tools/ci/WebKitBaseline.mjs
+          node --test tests/*.test.mjs
+      - name: Build arm64 IPA and exercise the same host in iPhone Simulator
+        run: bash tools/ci/Build-DeviceProbe.sh
+      - name: Preserve success and failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wk-device-probe-evidence
+          path: |
+            ${{ runner.temp }}/wk-device-probe-results/*.json
+            ${{ runner.temp }}/wk-device-probe-results/*.log
+            ${{ runner.temp }}/wk-device-probe-results/*.txt
+            ${{ runner.temp }}/wk-device-probe-results/*.png
+      - name: Preserve verified device IPA (requires SideStore re-signing)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ieynec-WK-Test-IPA
+          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/wk-device-probe-results/ieynec-WK-Test.ipa
+            ${{ runner.temp }}/wk-device-probe-results/ieynec-WK-Test.ipa.provenance.json
+            ${{ runner.temp }}/wk-device-probe-results/SHA256SUMS.txt

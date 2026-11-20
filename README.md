@@ -1,6 +1,8 @@
-# ieynec — WebKit 迁移工程（仅源码检查点，未完成）
+# ieynec — WebKit 迁移工程与 iPhone 测试宿主
 
-**这个仓库公开的是浏览器迁移中的源代码，不是已完成的 WebKit 浏览器，也没有可安装的 WebKit IPA。**
+**正式浏览器的原 UI 迁移仍未完成。新增独立 `ieynec WK Test` 真机测试目标，可由 `device-probe.yml` 构建供 SideStore 重签的 IPA，不替换原 ieynec。** 安装包只以成功构建/发布的实际附件为准；没有实机通过承诺。
+
+[测试宿主安装与限制](docs/IPHONE-WEBKIT-TEST.zh-CN.md)：真实 WKWebView 网页浏览、内置 uBO 研究包、合成网络测试、原版面板、临时自定义规则和错误报告。**测试宿主不是原 UI 迁移成品，扩展没有已启用的默认广告列表，也不是完整兼容。**
 
 > 当前生产入口 [`browser/Reynard/main.swift`](browser/Reynard/main.swift) 仍调用 `GeckoRuntime.main`。单独的 WebKit 模块/探测并不等于主界面已换引擎。**不要把本仓库原有构建脚本生成的 Gecko 包当作 WebKit 包。**
 
@@ -31,13 +33,15 @@
 | 完整 WebKit app archive / IPA / SideStore | **没有，未验收** |
 | 性能及蜂窝网络＋sing-box | 待实际设备测试，不给出虚构提速数字 |
 
-因此，这次仅有 GitHub Source code ZIP/tar.gz 和状态说明，没有 IPA/APK/TestFlight，也不宣称开箱即用。
+`v0.0.0-source.1` 仍是不可安装的源码检查点。新增 `tests/iphone-host/` 是独立诊断应用目标，可生成测试 IPA；不改变上表正式浏览器迁移未完成的状态，也不提供正式版/App Store/TestFlight。
 
-## 为什么本仓库关闭 GitHub Actions
+## 构建隔离
 
-为保留可追踪历史，旧 Gecko workflow、SDK引用和打包脚本仍在源码中，但 **本仓库 Actions 已在仓库设置关闭**，避免误触后生成 Gecko IPA 并误认为 WebKit 成果。
+旧 Gecko workflow、SDK引用和打包脚本保留，但三个旧 workflow 在仓库设置单独禁用，避免生成 Gecko IPA 并误认为 WebKit 成果。
 
-不要仅开启 Actions 后点击原来的 Build SideStore IPA：那仍是旧 Gecko 构建链。未来需要先完成真实 WebKit 生产接线、更新构建/验收门槛，再恢复相应 workflow。历史母项目原生探测链接保留，不能把关闭 Actions 描述为测试通过。
+只为新增手动 `device-probe.yml` 恢复 Actions；它直接编译独立 `tests/iphone-host/`，不调用旧 app 工程/Gecko打包链。gate验证WK网页、JS、内置本机页、非持久扩展上下文加载及IPA结构；**不要求uBO功能全通过，也绝不把绿色job当作完整兼容**。失败的过滤/后台状态保存在实际报告中，并在测试宿主可见。
+
+不要启用旧 Build SideStore IPA：它仍是 Gecko。正式迁移需要另行完成生产接线与构建/验收门槛。
 
 ## 本地只读检查
 
@@ -56,4 +60,4 @@ node --test tests/*.test.mjs
 
 保留 Reynard/Minh Ton 及所有原作者的版权、[GPL v3](LICENSE)、[Gecko MPL-2.0](LICENSE.firefox) 和第三方声明。不要改掉现有应用名称、标识和资源冒充新成品。
 
-English: **Source-only, incomplete WebKit migration checkpoint. The production app still starts Gecko. No WebKit IPA is available. Actions are disabled to prevent legacy Gecko builds being mistaken for a WebKit release.**
+English: **Incomplete production browser migration (still Gecko), plus a separate disposable iPhone WKWebView/WKWebExtension test host. Only the new manual test-host workflow is enabled. Its IPA is not the original UI migration and does not establish full uBO compatibility or physical-device acceptance.**

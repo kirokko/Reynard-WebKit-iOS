@@ -1,7 +1,11 @@
 {
   "repository": "kirokko/Reynard-WebKit-iOS",
-  "release": "v0.0.0-source.1",
-  "releaseKind": "source-only-incomplete-migration-checkpoint",
+  "release": "v0.0.1-device-probe.1",
+  "releaseKind": "disposable-device-test-host-candidate-with-incomplete-browser-migration",
+  "testHostTarget": "tests/iphone-host/DeviceHost.m",
+  "testHostDisplayName": "ieynec WK Test",
+  "testHostBundleIdentifier": "net.kirokko.ieynec.webkitprobe",
+  "testHostBuildWorkflow": "device-probe.yml",
   "applicationDisplayName": "ieynec",
   "sourceRepository": "https://github.com/kirokko/Reynard-Fennec-iOS",
   "sourceBranch": "port/full-ubo-webkit",
@@ -21,8 +25,9 @@
   "webKitBrowserIPAAvailable": false,
   "sideStoreVerified": false,
   "physicalDeviceVerified": false,
-  "githubActionsEnabled": false,
+  "githubActionsEnabled": true,
+  "legacyGeckoWorkflowsDisabled": true,
   "legacyGeckoBuildScriptsRetainedAsHistory": true,
   "independentExtensionProject": "https://github.com/kirokko/uBlock-Origin-WebKit",
-  "warning": "This is not a runnable WebKit browser release. Do not publish/install a legacy Gecko build as WebKit. No production app code, stored user data or original repository Release was changed for this publication."
+  "warning": "The production browser UI still uses Gecko. Only the separate WK test-host target builds a device-test IPA; not the original UI migration. Do not publish/install a legacy Gecko build as WebKit. Test-host and uBO functionality require device testing. No original production app code or stored user data was changed."
 }
