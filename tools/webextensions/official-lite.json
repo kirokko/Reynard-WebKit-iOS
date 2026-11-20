@@ -1,0 +1,21 @@
+{
+  "project": "uBlock Origin Lite",
+  "author": "Raymond Hill",
+  "home": "https://github.com/uBlockOrigin/uBOL-home",
+  "version": "2026.1116.1650",
+  "flavor": "official-safari",
+  "url": "https://github.com/uBlockOrigin/uBOL-home/releases/download/2026.1116.1650/uBOLite_2026.1116.1650.safari.zip",
+  "bytes": 9019932,
+  "sha256": "eed328928569264b321d9fc162c19a68167db54e36c1be51328d5739439907b4",
+  "digestSource": "GitHub release asset SHA-256, independently matched to downloaded bytes",
+  "minimumSafari": "18.6",
+  "manifestVersion": 3,
+  "background": {
+    "scripts": ["/js/background.js"],
+    "type": "module",
+    "persistent": false
+  },
+  "modificationsAllowed": false,
+  "nativeHostCompatibilityVerified": false,
+  "note": "Pin for integration work. Official Safari ZIP, not Chromium service-worker ZIP. Does not imply the production browser or Lite integration is complete."
+}

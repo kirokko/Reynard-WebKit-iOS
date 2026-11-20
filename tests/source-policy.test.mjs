@@ -63,7 +63,11 @@ test('manual application updates do not fetch any upstream feed', () => {
 test('legacy workflows stay manual; separate WK device-test workflow cannot invoke Gecko packaging', () => {
   const dir = path.join(root, '.github/workflows');
   const names = fs.readdirSync(dir).filter(p => p.endsWith('.yml'));
-  assert.deepEqual(names.sort(), ['build-sidestore.yml', 'build.yml', 'capture-protection-experiment.yml', 'device-probe.yml']);
+  assert.deepEqual(names.sort(), ['build-sidestore.yml', 'build.yml', 'capture-protection-experiment.yml', 'device-probe.yml', 'webkit-core.yml']);
+  const core = read('.github/workflows/webkit-core.yml');
+  assert.match(core, /workflow_dispatch:/);
+  assert.match(core, /Check-WebKitProductionCore\.sh/);
+  assert.doesNotMatch(core, /Build-DeviceProbe|Test-UBlockPort|uses:.*build\.yml/);
   const device = read('.github/workflows/device-probe.yml');
   assert.match(device, /workflow_dispatch:/);
   assert.match(device, /Build-DeviceProbe\.sh/);

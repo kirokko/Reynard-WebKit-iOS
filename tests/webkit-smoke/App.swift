@@ -55,6 +55,38 @@ final class WebKitSmokeApp: UIResponder, UIApplicationDelegate, WebKitSessionDel
         let secondPrivate = WebKitBrowsingProfile(isPrivate: true)
         try check(normal.dataStore.isPersistent, "normal uses persistent website store")
         try check(!privateProfile.dataStore.isPersistent, "private uses nonpersistent website store")
+        if #available(iOS 18.4, *) {
+            let extensionProfile = WebKitBrowsingProfile(isPrivate: true)
+            let host = WKWebExtensionController.Configuration.nonPersistent()
+            host.defaultWebsiteDataStore = extensionProfile.dataStore
+            let controller = WKWebExtensionController(configuration: host)
+            try extensionProfile.bindExtensionsController(controller)
+            let extensionTab = try WebKitSession(profile: extensionProfile)
+            try check(extensionTab.webView.configuration.webExtensionController === controller,
+                      "native extension controller attached before WK tab construction")
+            do {
+                try extensionProfile.bindExtensionsController(controller)
+                throw Failure.assertion("late extension binding accepted")
+            } catch WebKitBrowsingProfile.ExtensionConfigurationError.tooLate {
+                passed.append("late extension binding rejected, not silently attached to existing tabs")
+            }
+            let otherPrivateProfile = WebKitBrowsingProfile(isPrivate: true)
+            do {
+                try otherPrivateProfile.bindExtensionsController(controller)
+                throw Failure.assertion("cross-store extension controller accepted")
+            } catch WebKitBrowsingProfile.ExtensionConfigurationError.wrongWebsiteStore {
+                passed.append("cross-store extension controller rejected")
+            }
+            let bypass = WKWebViewConfiguration()
+            bypass.websiteDataStore = extensionProfile.dataStore
+            do {
+                _ = try WebKitSession(profile: extensionProfile, popupConfiguration: bypass)
+                throw Failure.assertion("popup without profile extension controller accepted")
+            } catch WebKitSession.SessionError.wrongPopupProfile {
+                passed.append("same-store popup cannot bypass profile extension controller")
+            }
+            extensionTab.close()
+        }
         session = try WebKitSession(profile: normal)
         session.delegate = self
         let view = window!.rootViewController!.view!

@@ -6,6 +6,23 @@ import WebKit
 final class WebKitBrowsingProfile {
     let isPrivate: Bool
     let dataStore: WKWebsiteDataStore
+    enum ExtensionConfigurationError: Error { case tooLate, wrongWebsiteStore, differentController }
+    private var extensionsControllerObject: AnyObject?
+    private var hasIssuedConfiguration = false
+
+    // A real native controller, bound before any tab configuration is issued.
+    // Binding alone does NOT imply Lite has initialized or installed its rules.
+    @available(iOS 18.4, *)
+    func bindExtensionsController(_ controller: WKWebExtensionController) throws {
+        guard !hasIssuedConfiguration else { throw ExtensionConfigurationError.tooLate }
+        guard controller.configuration.defaultWebsiteDataStore === dataStore else {
+            throw ExtensionConfigurationError.wrongWebsiteStore
+        }
+        if let existing = extensionsControllerObject, existing !== controller {
+            throw ExtensionConfigurationError.differentController
+        }
+        extensionsControllerObject = controller
+    }
 
     init(isPrivate: Bool) {
         self.isPrivate = isPrivate
@@ -17,8 +34,22 @@ final class WebKitBrowsingProfile {
         configuration.websiteDataStore = dataStore
         configuration.allowsInlineMediaPlayback = true
         configuration.allowsPictureInPictureMediaPlayback = true
+        if #available(iOS 18.4, *), let controller = extensionsControllerObject as? WKWebExtensionController {
+            configuration.webExtensionController = controller
+        }
+        hasIssuedConfiguration = true
         return configuration
     }
+
+    func acceptsPopupConfiguration(_ configuration: WKWebViewConfiguration) -> Bool {
+        guard configuration.websiteDataStore === dataStore else { return false }
+        if #available(iOS 18.4, *) {
+            return configuration.webExtensionController === (extensionsControllerObject as? WKWebExtensionController)
+        }
+        return true
+    }
+
+    func notePopupConfigurationUsed() { hasIssuedConfiguration = true }
 }
 
 @MainActor
@@ -56,11 +87,12 @@ final class WebKitSession: NSObject, WKNavigationDelegate, WKUIDelegate {
     }
 
     init(profile: WebKitBrowsingProfile, popupConfiguration: WKWebViewConfiguration? = nil) throws {
-        if let popupConfiguration, popupConfiguration.websiteDataStore !== profile.dataStore {
+        if let popupConfiguration, !profile.acceptsPopupConfiguration(popupConfiguration) {
             throw SessionError.wrongPopupProfile
         }
         self.profile = profile
         webView = WKWebView(frame: .zero, configuration: popupConfiguration ?? profile.configuration())
+        if popupConfiguration != nil { profile.notePopupConfigurationUsed() }
         super.init()
         webView.navigationDelegate = self
         webView.uiDelegate = self

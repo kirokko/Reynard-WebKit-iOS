@@ -1,63 +1,54 @@
-# ieynec — WebKit 迁移工程与 iPhone 测试宿主
+# ieynec — 基于原项目的完整 WebKit 迁移（进行中）
 
-**正式浏览器的原 UI 迁移仍未完成。新增独立 `ieynec WK Test` 真机测试目标，可由 `device-probe.yml` 构建供 SideStore 重签的 IPA，不替换原 ieynec。** 安装包只以成功构建/发布的实际附件为准；没有实机通过承诺。
+**当前尚未完工。生产主界面仍使用 Gecko，没有满足原 UI/功能要求的完整 WebKit IPA。不会再用独立测试壳或源码检查点冒充交付。**
 
-[测试宿主安装与限制](docs/IPHONE-WEBKIT-TEST.zh-CN.md)：真实 WKWebView 网页浏览、内置 uBO 研究包、合成网络测试、原版面板、临时自定义规则和错误报告。**测试宿主不是原 UI 迁移成品，扩展没有已启用的默认广告列表，也不是完整兼容。**
+## 当前方向
 
-> 当前生产入口 [`browser/Reynard/main.swift`](browser/Reynard/main.swift) 仍调用 `GeckoRuntime.main`。单独的 WebKit 模块/探测并不等于主界面已换引擎。**不要把本仓库原有构建脚本生成的 Gecko 包当作 WebKit 包。**
+- 以原 [Reynard-Fennec-iOS](https://github.com/kirokko/Reynard-Fennec-iOS) 的 **ieynec** 为唯一浏览器基础，保留已有 UI、图标资源、布局、工具栏、菜单、设置及交互/动画策略。
+- 只替换引擎和必要的平台适配，不引入 Floorp UI、Safari 风格测试栏或另一个浏览器架构。
+- **停止自研完整版 uBO 移植。广告过滤改用官方 uBO Lite Safari 包，不开发新的过滤引擎/规则转换器。**
+- 原仓库、原版本、已安装应用和用户数据不删除、不覆盖。WebKit 生产入口、迁移事务和实机验收完成之前不标“完工”。
 
-本独立项目从 [kirokko/Reynard-Fennec-iOS](https://github.com/kirokko/Reynard-Fennec-iOS/tree/port/full-ubo-webkit) 的迁移分支提取，保留该分支可达的提交历史、原 UI、资源、应用展示名 **ieynec** 和旧实现，尚未完成生产接线。不会覆盖原仓库、正式版本或用户数据，也没有创建一个简陋 WKWebView 壳冒充迁移成品。
+[正式迁移范围与完成门槛](docs/WEBKIT-PRODUCTION-PLAN.zh-CN.md) · [机器可读状态](SOURCE-STATUS.json)
 
-[源码检查点预发布](https://github.com/kirokko/Reynard-WebKit-iOS/releases) · [准确状态](SOURCE-STATUS.json) · [迁移审计](docs/webkit-migration/README.md)
+## 旧实验已退役
 
-## 已有代码与证据
+`v0.0.1-device-probe.1` 的 `ieynec WK Test` 是历史诊断宿主，**不是原项目 UI**，已停止开发，发布页已标退役。旧的三个 Gecko workflow 和独立测试 IPA workflow 均禁用，不再为它们触发构建。
 
-- `browser/WebKitEngine/WebKitSession.swift`：真实 WKWebView 会话基础，含普通/私密 store、导航/KVO、错误及进程终止处理；**未接入生产 SessionManager/UI**。
-- `browser/WebKitEngine/LegacySessionProjection.swift`：旧 Gecko 导航状态的只读 URL/title 投影，不改旧库，不声称恢复原生 WKBackForwardList。
-- `tests/webkit-smoke/`：实际 WebKit 和扩展能力的独立原生诊断，不能当成完整浏览器测试。
-- `docs/webkit-migration/`：审计、原始结果、未完成项和实机清单。已有成功结果来自母项目的精确提交/run，不是新仓库的完整 archive 或实机验收。
+自研 uBO 仓库已归档停用；永久删除尝试被 GitHub 的 `delete_repo` 权限限制阻止，**不能把“归档”写成“删除完成”**。旧测试包对应的补丁/源码归档和上游源码仍附在旧浏览器诊断发布中，仅用于许可证合规、重建和历史追踪，不作为独立插件继续开发。
 
-完整版 uBO 的移植实验已单独发布在 [uBlock-Origin-WebKit](https://github.com/kirokko/uBlock-Origin-WebKit)。它仍是 probe-only，不是 Lite，也不是完整兼容成品；独立原生 CI 出现 Worker 超时，失败已披露。本浏览器也没有因此获得完整 uBO 能力。
+历史目录 `ports/ublock-webkit/`、`tools/ublock/`、`tests/iphone-host/` 等暂留用于对应源码和可追溯性，不是当前产品实现。旧证据中的成功/失败都保留，不将它们解释为 Lite 或正式浏览器已完成。
 
-## 尚未完成，不能发布 IPA
+## 官方 Lite 接入起点
 
-| 项目 | 当前状态 |
-|---|---|
-| 生产入口 / 主界面 | **仍为 Gecko，未接 WebKit** |
-| 原 UI、手势、下载、权限、阅读模式等的 WebKit 适配 | 未完成 |
-| 扩展安装/权限/后台、完整 uBO | 未完成 |
-| 视频旋转建议按钮、点击后保持方向 | 未实现到 WebKit 生产路径 |
-| 用户数据迁移、回滚和私密数据审计 | 未完成 |
-| 移除 Gecko SDK/Helper/targets | 未完成 |
-| 清理旧 UI 私有 API | 未完成；不标记整个工程已满足仅公开 API |
-| 完整 WebKit app archive / IPA / SideStore | **没有，未验收** |
-| 性能及蜂窝网络＋sing-box | 待实际设备测试，不给出虚构提速数字 |
+固定官方 `uBOLite_2026.1116.1650.safari.zip`，下载地址及 GitHub SHA-256 在 [`tools/webextensions/official-lite.json`](tools/webextensions/official-lite.json)。Safari 版本使用 MV3、非持久 module background scripts；**不是先前合成 MV3 service-worker fixture**。包声明最低 Safari18.6，正式工程需落实相应最低系统策略。
 
-`v0.0.0-source.1` 仍是不可安装的源码检查点。新增 `tests/iphone-host/` 是独立诊断应用目标，可生成测试 IPA；不改变上表正式浏览器迁移未完成的状态，也不提供正式版/App Store/TestFlight。
+安全暂存工具只校验/解包固定包，逐文件保持原样，不改 manifest、不替换后台、不添加合成规则或篡改默认列表：
 
-## 构建隔离
+```sh
+python3 tools/webextensions/stage-official-lite.py path/to/official.safari.zip path/to/NEW-directory
+python3 tools/webextensions/test-stage-official-lite.py path/to/official.safari.zip
+```
 
-旧 Gecko workflow、SDK引用和打包脚本保留，但三个旧 workflow 在仓库设置单独禁用，避免生成 Gecko IPA 并误认为 WebKit 成果。
+Windows 使用 `py -3`。**包完整性校验不等于 WKWebExtension 运行兼容，原生 Lite 接入尚未验收。** Safari App Store 安装的扩展也不会自动出现在自有 WKWebView 中，需要宿主实际接入。
 
-只为新增手动 `device-probe.yml` 恢复 Actions；它直接编译独立 `tests/iphone-host/`，不调用旧 app 工程/Gecko打包链。gate验证WK网页、JS、内置本机页、非持久扩展上下文加载及IPA结构；**不要求uBO功能全通过，也绝不把绿色job当作完整兼容**。失败的过滤/后台状态保存在实际报告中，并在测试宿主可见。
+## 工程状态
 
-不要启用旧 Build SideStore IPA：它仍是 Gecko。正式迁移需要另行完成生产接线与构建/验收门槛。
+真实 `WebKitSession`、普通/私密 profile、只读旧会话投影已经存在。新增 profile 扩展控制器绑定保证在创建标签页之前完成，并拒绝跨 website store 和绕过控制器的 popup 配置；它不等于 Lite 初始化或规则安装成功。
 
-## 本地只读检查
+原 `SessionManager`、`Tab`、`WebContentView`、`BrowserViewController` 和扩展协调器的生产接线仍需完成。Gecko SDK/Helper、旧 UI 私有 API、下载/权限/阅读模式/视频与数据迁移等未完成，不删难迁移功能求编译，不做空成功回调。
 
-Windows 可运行，不需要本地 Xcode：
+唯一恢复使用的 `webkit-core.yml` 是**内部工程验证**：arm64核心编译、实际WK核心测试、官方Lite逐字节暂存检查。它不构建浏览器 IPA，不验收正式 UI，也不代表 Lite 原生运行通过。
 
 ```sh
 node tools/ci/WebKitBaseline.mjs
 node --test tests/*.test.mjs
 ```
 
-基线仍保护原应用源码、UI资源、数据写入和旧打包文件；本次没有放宽 gate 或删功能求编译。这些检查不能证明 WebKit app 已完成。
+原应用源码/UI资源保护基线保留；进入生产接线时按明确修改清单更新审核门槛，而不是绕过检查。
 
-## 原 Gecko 文档与许可证
+## 原项目与许可证
 
-原 README 完整保存在 [`docs/GECKO-BASELINE-README.md`](docs/GECKO-BASELINE-README.md)。它描述的是原 Gecko 浏览器/历史包；内部相对链接仍按原仓库根目录解释，**不是本项目 WebKit 发行说明**。
+原 Gecko README 见 [`docs/GECKO-BASELINE-README.md`](docs/GECKO-BASELINE-README.md)，其构建/安装说明只对应历史 Gecko 工程，不是 WebKit 交付指南。原应用展示名仍是 **ieynec**。
 
-保留 Reynard/Minh Ton 及所有原作者的版权、[GPL v3](LICENSE)、[Gecko MPL-2.0](LICENSE.firefox) 和第三方声明。不要改掉现有应用名称、标识和资源冒充新成品。
-
-English: **Incomplete production browser migration (still Gecko), plus a separate disposable iPhone WKWebView/WKWebExtension test host. Only the new manual test-host workflow is enabled. Its IPA is not the original UI migration and does not establish full uBO compatibility or physical-device acceptance.**
+保留 Reynard/Minh Ton、Raymond Hill及所有原作者的版权、[GPL v3](LICENSE)、[Gecko MPL-2.0](LICENSE.firefox) 与第三方声明。原始浏览器仓库和回滚版本不受本项目退役实验影响。

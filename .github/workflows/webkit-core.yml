@@ -1,0 +1,30 @@
+name: WebKit core and official Lite staging (internal, NO app acceptance)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: wk-production-core-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  core:
+    runs-on: macos-26
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.6'
+      - run: |
+          node tools/ci/WebKitBaseline.mjs
+          node --test tests/*.test.mjs
+      - name: Typecheck arm64 engine, run native core tests, preserve official Lite bytes
+        run: bash tools/ci/Check-WebKitProductionCore.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: internal-webkit-core-evidence
+          path: ${{ runner.temp }}/wk-production-core-results/
