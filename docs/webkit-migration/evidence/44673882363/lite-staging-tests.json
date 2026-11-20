@@ -1,0 +1,10 @@
+{
+  "passed": [
+    "wrong bytes refused before output creation",
+    "existing profile refused and preserved",
+    "every official file unchanged; no custom bootstrap, config seed or extra files"
+  ],
+  "count": 3,
+  "stagedFiles": 914,
+  "nativeHostCompatibilityVerified": false
+}
